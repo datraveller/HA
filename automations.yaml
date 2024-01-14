@@ -1,0 +1,791 @@
+- id: '1697924549682'
+  alias: 'Sun room light on: sunset -> 23:00'
+  description: Light on at sunset and off at 11pm
+  trigger:
+  - platform: time
+    at: sensor.sun_next_setting
+  - platform: time
+    at: '23:00:00'
+  condition: []
+  action:
+  - if:
+    - condition: time
+      after: sensor.sun_next_setting
+      before: '23:00:00'
+    then:
+    - type: turn_on
+      device_id: 865b140ce0c0b8758f7117c599cbbf38
+      entity_id: a0a9186c6ec2fd050b45d449a8056597
+      domain: light
+    else:
+    - type: turn_off
+      device_id: 865b140ce0c0b8758f7117c599cbbf38
+      entity_id: a0a9186c6ec2fd050b45d449a8056597
+      domain: light
+  mode: single
+- id: '1700366280454'
+  alias: 'Study TV on: Motion detected'
+  description: ''
+  trigger:
+  - type: occupied
+    platform: device
+    device_id: 1ecfc00201923f7d93c657d412bb2763
+    entity_id: ae823227e2e388a9d6c1adbb80619edd
+    domain: binary_sensor
+  condition: []
+  action:
+  - type: turn_on
+    device_id: 1927db99cce57a51ea591daad56a701a
+    entity_id: 4cdf09586aef9b8408561ea5784bb50b
+    domain: light
+  mode: single
+- id: '1700366510031'
+  alias: 'Study TV off: No motion 15min'
+  description: ''
+  trigger:
+  - type: not_occupied
+    platform: device
+    device_id: 1ecfc00201923f7d93c657d412bb2763
+    entity_id: ae823227e2e388a9d6c1adbb80619edd
+    domain: binary_sensor
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+  condition: []
+  action:
+  - type: turn_off
+    device_id: 1927db99cce57a51ea591daad56a701a
+    entity_id: 4cdf09586aef9b8408561ea5784bb50b
+    domain: light
+  mode: single
+- id: '1700373429138'
+  alias: 'Bedroom & Study blind close: various'
+  description: ''
+  trigger:
+  - platform: sun
+    event: sunset
+    offset: 0
+  - type: temperature
+    platform: device
+    device_id: 615d0c10e5cc0e7aa2dd5efc83c8d3a7
+    entity_id: b79552a788ac700a029870fd253c1692
+    domain: sensor
+    below: 15
+  - platform: state
+    entity_id:
+    - sensor.aqara_temp_humidity_sensor_temperature_4
+    attribute: Unavailable
+  - platform: time
+    at: '19:30:00'
+  - platform: sun
+    event: sunrise
+    offset: -0:30:00
+  condition:
+  - alias: (after 19:30 & temp below 15°/unavailable) or btwn midnight & sunrise
+    condition: or
+    conditions:
+    - condition: and
+      conditions:
+      - condition: time
+        after: '19:30:00'
+        before: 00:00:00
+      - alias: Temp below 15°/unavailable
+        condition: or
+        conditions:
+        - condition: state
+          entity_id: sensor.aqara_temp_humidity_sensor_temperature_4
+          state: unavailable
+        - type: is_temperature
+          condition: device
+          device_id: 615d0c10e5cc0e7aa2dd5efc83c8d3a7
+          entity_id: b79552a788ac700a029870fd253c1692
+          domain: sensor
+          below: 15
+    - condition: sun
+      before: sunrise
+  action:
+  - parallel:
+    - device_id: 672ef89b7334327d207e96e0634b0501
+      domain: cover
+      entity_id: 2e7296b2aafce2d525e6a997514cf907
+      type: close
+      enabled: false
+    - if:
+      - condition: state
+        entity_id: automation.turn_off_fan
+        state: 'on'
+      then:
+      - device_id: c791564b0658663cc0d11a49f0051189
+        domain: button
+        entity_id: 7396944f86ae9732affa51ce4e3b07b2
+        type: press
+        enabled: true
+      else:
+      - device_id: c791564b0658663cc0d11a49f0051189
+        domain: cover
+        entity_id: 3631a45a151eba88308fed28885abc2c
+        type: close
+        enabled: true
+  mode: single
+- id: '1700802939089'
+  alias: House Close-up (North Garden rising)
+  description: ''
+  trigger:
+  - type: temperature
+    platform: device
+    device_id: 615d0c10e5cc0e7aa2dd5efc83c8d3a7
+    entity_id: b79552a788ac700a029870fd253c1692
+    domain: sensor
+    above: 21
+  - type: temperature
+    platform: device
+    device_id: 842b272bc80eae242e1a0ce3652b456f
+    entity_id: 218f23ca123716ec37951ae7e33c3e38
+    domain: sensor
+    above: 21
+  - type: temperature
+    platform: device
+    device_id: 26e4a55a8e7c74dc607ec65160b8d80c
+    entity_id: 6dc983c26bdb66add1bc2fd4a33724f0
+    domain: sensor
+    above: 21
+  - type: temperature
+    platform: device
+    device_id: 017630e21dd45d2f7510f209268315d9
+    entity_id: aace7a87ebbb72188b8774fdcdfce163
+    domain: sensor
+    above: 21
+  - type: temperature
+    platform: device
+    device_id: ae50ddd75953fdf0abc75aa71061fe4f
+    entity_id: 9af453a75f37b55daba3bfea84024e65
+    domain: sensor
+    above: 21
+  condition: []
+  action:
+  - parallel:
+    - alias: Bedroom Alert
+      if:
+      - type: is_temperature
+        condition: device
+        device_id: 842b272bc80eae242e1a0ce3652b456f
+        entity_id: 218f23ca123716ec37951ae7e33c3e38
+        domain: sensor
+        above: 21
+      - condition: numeric_state
+        entity_id: sensor.aqara_temp_humidity_sensor_temperature_4
+        above: sensor.aqara_temp_humidity_sensor_temperature_2
+      then:
+      - device_id: 06ea58755fdd54626a7c62f93b10ece0
+        domain: mobile_app
+        type: notify
+        message: Close Bedroom (North Garden Hot)
+        title: Close Bedroom
+    - alias: Study Alert
+      if:
+      - type: is_temperature
+        condition: device
+        device_id: 26e4a55a8e7c74dc607ec65160b8d80c
+        entity_id: 6dc983c26bdb66add1bc2fd4a33724f0
+        domain: sensor
+        above: 21
+      - condition: numeric_state
+        entity_id: sensor.aqara_temp_humidity_sensor_temperature_4
+        above: sensor.aqara_temp_humidity_sensor_temperature
+      then:
+      - device_id: 06ea58755fdd54626a7c62f93b10ece0
+        domain: mobile_app
+        type: notify
+        message: Close Study (North Garden Hot)
+        title: Close Study
+    - alias: Living Room Alert
+      if:
+      - type: is_temperature
+        condition: device
+        device_id: 017630e21dd45d2f7510f209268315d9
+        entity_id: aace7a87ebbb72188b8774fdcdfce163
+        domain: sensor
+        above: 21
+      - condition: numeric_state
+        entity_id: sensor.aqara_temp_humidity_sensor_temperature_4
+        above: sensor.aqara_temp_humidity_sensor_temperature_3
+      then:
+      - device_id: 06ea58755fdd54626a7c62f93b10ece0
+        domain: mobile_app
+        type: notify
+        message: Close Living Room (North Garden Hot)
+        title: Close Living Room
+    - alias: Sun Room Alert
+      if:
+      - type: is_temperature
+        condition: device
+        device_id: ae50ddd75953fdf0abc75aa71061fe4f
+        entity_id: 9af453a75f37b55daba3bfea84024e65
+        domain: sensor
+        above: 21
+      - condition: numeric_state
+        entity_id: sensor.aqara_temp_humidity_sensor_temperature_4
+        above: sensor.aqara_temp_humidity_sensor_temperature_5
+      then:
+      - device_id: 06ea58755fdd54626a7c62f93b10ece0
+        domain: mobile_app
+        type: notify
+        message: Close Sun Room (North Garden Hot)
+        title: Close Sun Room
+  mode: single
+- id: '1701116030310'
+  alias: 'Kitchen tree on: hourly for 55min (01:00 -> 19:30) v2'
+  description: ''
+  trigger:
+  - platform: time_pattern
+    hours: '*'
+    minutes: '0'
+    seconds: '0'
+    id: Hourly_trigger
+  - platform: time_pattern
+    hours: '*'
+    minutes: '55'
+    seconds: '0'
+    id: 55 Min Trigger
+  - platform: time
+    at: '19:30:00'
+  - platform: device
+    type: turned_off
+    device_id: 463b7b245badf8468c45b95e070014b6
+    entity_id: 41dbb66a3b3c4814e3c0c5c46cff5d4e
+    domain: light
+    id: Kitchen Light turned off
+  condition: []
+  action:
+  - alias: Turn tree on if on the hour
+    if:
+    - condition: trigger
+      id:
+      - Hourly_trigger
+    - condition: time
+      after: 01:00:00
+      before: '20:00:00'
+      enabled: true
+    then:
+    - type: turn_on
+      device_id: 8001a44a3eedda4c43f193aa84b28cd3
+      entity_id: 19b0593981b96feee862aa863e931bc6
+      domain: light
+    else:
+    - alias: Turn tree off if ...
+      if:
+      - condition: or
+        conditions:
+        - condition: trigger
+          id:
+          - 55 Min Trigger
+        - condition: time
+          after: '19:30:00'
+      - condition: device
+        type: is_on
+        device_id: 8001a44a3eedda4c43f193aa84b28cd3
+        entity_id: 19b0593981b96feee862aa863e931bc6
+        domain: light
+      - condition: device
+        type: is_off
+        device_id: 463b7b245badf8468c45b95e070014b6
+        entity_id: 41dbb66a3b3c4814e3c0c5c46cff5d4e
+        domain: light
+      - condition: or
+        conditions:
+        - type: is_not_occupied
+          condition: device
+          device_id: 69008db66ed5bd1bdf21ae7ba6667cca
+          entity_id: b1f716d545e991b6f599b05aa623b725
+          domain: binary_sensor
+          for:
+            hours: 0
+            minutes: 5
+            seconds: 0
+        - condition: trigger
+          id:
+          - Kitchen Light turned off
+      then:
+      - type: turn_off
+        device_id: 8001a44a3eedda4c43f193aa84b28cd3
+        entity_id: 19b0593981b96feee862aa863e931bc6
+        domain: light
+  trace:
+    stored_traces: 100
+  mode: single
+- id: '1701552188207'
+  alias: Bedroom fan on/off
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - automation.new_automation_2
+    attribute: current
+    id: Blind closing
+  - platform: state
+    entity_id:
+    - sensor.aqara_temp_humidity_sensor_temperature_2
+  condition: []
+  action:
+  - if:
+    - condition: trigger
+      id:
+      - Blind closing
+    then:
+    - type: turn_off
+      device_id: 1be7129741dc9d1a5376c2841beee6c6
+      entity_id: 5c3d92434dd87f61c2fff620d70801c1
+      domain: light
+    - service: automation.turn_off
+      target:
+        entity_id: automation.turn_off_fan
+      data:
+        stop_actions: false
+    - if:
+      - condition: numeric_state
+        entity_id: fan.ceiling_fan
+        attribute: percentage
+        above: 25
+      then:
+      - service: fan.set_percentage
+        target:
+          entity_id: fan.ceiling_fan
+        data:
+          percentage: 25
+    else:
+    - if:
+      - condition: numeric_state
+        entity_id: sensor.aqara_temp_humidity_sensor_temperature_2
+        above: sensor.aqara_temp_humidity_sensor_temperature_4
+        enabled: true
+      - alias: Current Temp >22° C
+        type: is_temperature
+        condition: device
+        device_id: 842b272bc80eae242e1a0ce3652b456f
+        entity_id: 218f23ca123716ec37951ae7e33c3e38
+        domain: sensor
+        above: 21.5
+      then:
+      - type: turn_on
+        device_id: 1be7129741dc9d1a5376c2841beee6c6
+        entity_id: 5c3d92434dd87f61c2fff620d70801c1
+        domain: light
+      - if:
+        - condition: time
+          after: 09:00:00
+          before: '19:00:00'
+        then:
+        - if:
+          - condition: device
+            device_id: 633fcd45d53acdf6750ea4e66efd485c
+            domain: fan
+            entity_id: 2e8069994ffa676353a3f0c1df54e488
+            type: is_off
+          then:
+          - service: fan.set_percentage
+            target:
+              entity_id: fan.ceiling_fan
+            data:
+              percentage: 100
+          alias: Set fan to 100% if off
+        else:
+        - if:
+          - condition: device
+            device_id: 633fcd45d53acdf6750ea4e66efd485c
+            domain: fan
+            entity_id: 2e8069994ffa676353a3f0c1df54e488
+            type: is_off
+          then:
+          - service: fan.set_percentage
+            target:
+              entity_id: fan.ceiling_fan
+            data:
+              percentage: 25
+          alias: Set fan to 25% if off
+      else:
+      - type: turn_off
+        device_id: 1be7129741dc9d1a5376c2841beee6c6
+        entity_id: 5c3d92434dd87f61c2fff620d70801c1
+        domain: light
+      - if:
+        - condition: numeric_state
+          entity_id: fan.ceiling_fan
+          attribute: percentage
+          above: 25
+        then:
+        - service: fan.set_percentage
+          target:
+            entity_id: fan.ceiling_fan
+          data:
+            percentage: 25
+        alias: Set fan to 25% if >25%
+  trace:
+    stored_traces: 10
+  mode: restart
+- id: '1702327534412'
+  alias: 'Bedroom blind open: fixed time (weekdays)'
+  description: ''
+  trigger:
+  - platform: time
+    at: 06:30:00
+  condition:
+  - condition: time
+    weekday:
+    - tue
+    - wed
+    - thu
+    - fri
+    - mon
+  action:
+  - device_id: c791564b0658663cc0d11a49f0051189
+    domain: cover
+    entity_id: 3631a45a151eba88308fed28885abc2c
+    type: open
+  - if:
+    - condition: device
+      device_id: 633fcd45d53acdf6750ea4e66efd485c
+      domain: fan
+      entity_id: 2e8069994ffa676353a3f0c1df54e488
+      type: is_on
+    then:
+    - type: turn_off
+      device_id: 633fcd45d53acdf6750ea4e66efd485c
+      entity_id: 2e8069994ffa676353a3f0c1df54e488
+      domain: fan
+  mode: single
+- id: '1703008043515'
+  alias: Pool Pump Unavailable Notification
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - light.aqara_single_switch_module_t1
+    to: unavailable
+  condition: []
+  action:
+  - device_id: 06ea58755fdd54626a7c62f93b10ece0
+    domain: mobile_app
+    type: notify
+    message: Pool Pump - Unvailable
+  mode: single
+- id: '1703008240158'
+  alias: Pool Pump Available Notification
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - light.aqara_single_switch_module_t1
+    from: unavailable
+    to:
+  condition: []
+  action:
+  - device_id: 06ea58755fdd54626a7c62f93b10ece0
+    domain: mobile_app
+    type: notify
+    message: Pool Pump - Available
+  mode: single
+- id: '1704491262981'
+  alias: 'Kitchen TV off: No motion 5min'
+  description: ''
+  trigger:
+  - type: not_occupied
+    platform: device
+    device_id: 69008db66ed5bd1bdf21ae7ba6667cca
+    entity_id: b1f716d545e991b6f599b05aa623b725
+    domain: binary_sensor
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+  - platform: device
+    type: turned_off
+    device_id: 463b7b245badf8468c45b95e070014b6
+    entity_id: 41dbb66a3b3c4814e3c0c5c46cff5d4e
+    domain: light
+  condition: []
+  action:
+  - type: turn_off
+    device_id: 7bdfdf66bebc4b6f9fa34ea5bf03f917
+    entity_id: 582cefef428a9eb38cfc15986b6f70de
+    domain: remote
+    enabled: true
+  - service: media_player.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: media_player.32_smart_monitor_m7
+    enabled: false
+  trace:
+    stored_traces: 10
+  mode: single
+- id: '1704491347738'
+  alias: 'Kitchen TV on: Motion detected'
+  description: ''
+  trigger:
+  - type: occupied
+    platform: device
+    device_id: 69008db66ed5bd1bdf21ae7ba6667cca
+    entity_id: b1f716d545e991b6f599b05aa623b725
+    domain: binary_sensor
+  condition: []
+  action:
+  - type: turn_on
+    device_id: 7bdfdf66bebc4b6f9fa34ea5bf03f917
+    entity_id: 582cefef428a9eb38cfc15986b6f70de
+    domain: remote
+    enabled: true
+  - service: media_player.turn_on
+    target:
+      entity_id: media_player.32_smart_monitor_m7
+    data: {}
+  mode: single
+- id: '1704735209265'
+  alias: Trigger (Fan on/off when enabled)
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - automation.turn_off_fan
+    to: 'on'
+  condition: []
+  action:
+  - service: automation.trigger
+    metadata: {}
+    data:
+      skip_condition: true
+    target:
+      entity_id: automation.turn_off_fan
+  mode: single
+- id: '1704779429336'
+  alias: Temp High
+  description: ''
+  trigger: []
+  condition:
+  - condition: numeric_state
+    entity_id: sensor.aqara_temp_humidity_sensor_temperature_2
+    above: sensor.aqara_temp_humidity_sensor_temperature_4
+  action: []
+  mode: single
+- id: '1705225553952'
+  alias: House Open-up (Summer North Garden Cooling)
+  description: ''
+  trigger:
+  - type: temperature
+    platform: device
+    device_id: 615d0c10e5cc0e7aa2dd5efc83c8d3a7
+    entity_id: b79552a788ac700a029870fd253c1692
+    domain: sensor
+    below: 21
+  - type: temperature
+    platform: device
+    device_id: 842b272bc80eae242e1a0ce3652b456f
+    entity_id: 218f23ca123716ec37951ae7e33c3e38
+    domain: sensor
+    above: 21
+    enabled: true
+  - type: temperature
+    platform: device
+    device_id: 26e4a55a8e7c74dc607ec65160b8d80c
+    entity_id: 6dc983c26bdb66add1bc2fd4a33724f0
+    domain: sensor
+    above: 21
+    enabled: true
+  - type: temperature
+    platform: device
+    device_id: 017630e21dd45d2f7510f209268315d9
+    entity_id: aace7a87ebbb72188b8774fdcdfce163
+    domain: sensor
+    above: 21
+    enabled: true
+  - type: temperature
+    platform: device
+    device_id: ae50ddd75953fdf0abc75aa71061fe4f
+    entity_id: 9af453a75f37b55daba3bfea84024e65
+    domain: sensor
+    above: 21
+    enabled: true
+  condition: []
+  action:
+  - parallel:
+    - alias: Bedroom Alert
+      if:
+      - type: is_temperature
+        condition: device
+        device_id: 842b272bc80eae242e1a0ce3652b456f
+        entity_id: 218f23ca123716ec37951ae7e33c3e38
+        domain: sensor
+        above: 21
+      - condition: numeric_state
+        entity_id: sensor.aqara_temp_humidity_sensor_temperature_4
+        below: sensor.aqara_temp_humidity_sensor_temperature_2
+      then:
+      - device_id: 06ea58755fdd54626a7c62f93b10ece0
+        domain: mobile_app
+        type: notify
+        message: Open Bedroom (North Garden Hot)
+        title: Open Bedroom
+    - alias: Study Alert
+      if:
+      - type: is_temperature
+        condition: device
+        device_id: 26e4a55a8e7c74dc607ec65160b8d80c
+        entity_id: 6dc983c26bdb66add1bc2fd4a33724f0
+        domain: sensor
+        above: 21
+      - condition: numeric_state
+        entity_id: sensor.aqara_temp_humidity_sensor_temperature_4
+        below: sensor.aqara_temp_humidity_sensor_temperature
+      then:
+      - device_id: 06ea58755fdd54626a7c62f93b10ece0
+        domain: mobile_app
+        type: notify
+        message: Open Study (North Garden Hot)
+        title: Open Study
+    - alias: Living Room Alert
+      if:
+      - type: is_temperature
+        condition: device
+        device_id: 017630e21dd45d2f7510f209268315d9
+        entity_id: aace7a87ebbb72188b8774fdcdfce163
+        domain: sensor
+        above: 21
+      - condition: numeric_state
+        entity_id: sensor.aqara_temp_humidity_sensor_temperature_4
+        below: sensor.aqara_temp_humidity_sensor_temperature_3
+      then:
+      - device_id: 06ea58755fdd54626a7c62f93b10ece0
+        domain: mobile_app
+        type: notify
+        message: Open Living Room (North Garden Hot)
+        title: Open Living Room
+    - alias: Sun Room Alert
+      if:
+      - type: is_temperature
+        condition: device
+        device_id: ae50ddd75953fdf0abc75aa71061fe4f
+        entity_id: 9af453a75f37b55daba3bfea84024e65
+        domain: sensor
+        above: 21
+      - condition: numeric_state
+        entity_id: sensor.aqara_temp_humidity_sensor_temperature_4
+        below: sensor.aqara_temp_humidity_sensor_temperature_5
+      then:
+      - device_id: 06ea58755fdd54626a7c62f93b10ece0
+        domain: mobile_app
+        type: notify
+        message: Open Sun Room (North Garden Hot)
+        title: Open Sun Room
+  mode: single
+- id: '1705226727553'
+  alias: House Close-up (Winter North Garden Cooling)
+  description: ''
+  trigger:
+  - type: temperature
+    platform: device
+    device_id: 615d0c10e5cc0e7aa2dd5efc83c8d3a7
+    entity_id: b79552a788ac700a029870fd253c1692
+    domain: sensor
+    below: 22
+  - type: temperature
+    platform: device
+    device_id: 842b272bc80eae242e1a0ce3652b456f
+    entity_id: 218f23ca123716ec37951ae7e33c3e38
+    domain: sensor
+    enabled: true
+    below: 22
+  - type: temperature
+    platform: device
+    device_id: 26e4a55a8e7c74dc607ec65160b8d80c
+    entity_id: 6dc983c26bdb66add1bc2fd4a33724f0
+    domain: sensor
+    enabled: true
+    below: 22
+  - type: temperature
+    platform: device
+    device_id: 017630e21dd45d2f7510f209268315d9
+    entity_id: aace7a87ebbb72188b8774fdcdfce163
+    domain: sensor
+    enabled: true
+    below: 22
+  - type: temperature
+    platform: device
+    device_id: ae50ddd75953fdf0abc75aa71061fe4f
+    entity_id: 9af453a75f37b55daba3bfea84024e65
+    domain: sensor
+    enabled: true
+    below: 22
+  condition: []
+  action:
+  - parallel:
+    - alias: Bedroom Alert
+      if:
+      - type: is_temperature
+        condition: device
+        device_id: 842b272bc80eae242e1a0ce3652b456f
+        entity_id: 218f23ca123716ec37951ae7e33c3e38
+        domain: sensor
+        below: 22
+      - condition: numeric_state
+        entity_id: sensor.aqara_temp_humidity_sensor_temperature_4
+        below: sensor.aqara_temp_humidity_sensor_temperature_2
+      then:
+      - device_id: 06ea58755fdd54626a7c62f93b10ece0
+        domain: mobile_app
+        type: notify
+        message: Open Bedroom (North Garden Hot)
+        title: Open Bedroom
+    - alias: Study Alert
+      if:
+      - type: is_temperature
+        condition: device
+        device_id: 26e4a55a8e7c74dc607ec65160b8d80c
+        entity_id: 6dc983c26bdb66add1bc2fd4a33724f0
+        domain: sensor
+        below: 22
+      - condition: numeric_state
+        entity_id: sensor.aqara_temp_humidity_sensor_temperature_4
+        below: sensor.aqara_temp_humidity_sensor_temperature
+      then:
+      - device_id: 06ea58755fdd54626a7c62f93b10ece0
+        domain: mobile_app
+        type: notify
+        message: Open Study (North Garden Hot)
+        title: Open Study
+    - alias: Living Room Alert
+      if:
+      - type: is_temperature
+        condition: device
+        device_id: 017630e21dd45d2f7510f209268315d9
+        entity_id: aace7a87ebbb72188b8774fdcdfce163
+        domain: sensor
+        below: 22
+      - condition: numeric_state
+        entity_id: sensor.aqara_temp_humidity_sensor_temperature_4
+        above: sensor.aqara_temp_humidity_sensor_temperature_3
+        below: sensor.aqara_temp_humidity_sensor_temperature_3
+      then:
+      - device_id: 06ea58755fdd54626a7c62f93b10ece0
+        domain: mobile_app
+        type: notify
+        message: Open Living Room (North Garden Hot)
+        title: Open Living Room
+    - alias: Sun Room Alert
+      if:
+      - type: is_temperature
+        condition: device
+        device_id: ae50ddd75953fdf0abc75aa71061fe4f
+        entity_id: 9af453a75f37b55daba3bfea84024e65
+        domain: sensor
+        below: 22
+      - condition: numeric_state
+        entity_id: sensor.aqara_temp_humidity_sensor_temperature_4
+        above: sensor.aqara_temp_humidity_sensor_temperature_5
+        below: sensor.aqara_temp_humidity_sensor_temperature_5
+      then:
+      - device_id: 06ea58755fdd54626a7c62f93b10ece0
+        domain: mobile_app
+        type: notify
+        message: Open Sun Room (North Garden Hot)
+        title: Open Sun Room
+  mode: single
